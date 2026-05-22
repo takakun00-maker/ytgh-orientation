@@ -23,8 +23,7 @@ function genToken() {
 }
 
 function hashPass(pass) {
-  return crypto.createHmac('sha256', process.env.JWT_SECRET || 'ytgh-secret')
-               .update(pass).digest('hex');
+  return crypto.createHash('sha256').update(pass).digest('hex');
 }
 
 // ─── Response helpers ────────────────────────────────────────

@@ -1,0 +1,16 @@
+{
+  "name": "ytgh-orientation-system",
+  "version": "1.0.0",
+  "description": "八尾徳洲会総合病院 外部業者オリエンテーション管理システム",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "scripts": {
+    "dev":   "netlify dev",
+    "build": "echo 'static site, no build step'"
+  }
+}

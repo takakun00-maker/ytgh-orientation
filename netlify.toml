@@ -1,0 +1,37 @@
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/api/*"
+  to   = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/hospital"
+  to   = "/hospital/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/vendor"
+  to   = "/vendor/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/"
+  to   = "/hospital/index.html"
+  status = 302
+
+[functions]
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options        = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy        = "strict-origin-when-cross-origin"
+    Permissions-Policy     = "camera=(), microphone=(), geolocation=()"

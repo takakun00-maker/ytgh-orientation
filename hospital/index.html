@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>オリエンテーション管理 — 八尾徳洲会総合病院</title>
+<style>
+:root{
+  --navy:#0F2D5C;--navy2:#1A3F7A;--sky:#38BDF8;--navy-lt:#E6F1FB;--navy-md:#B5D4F4;
+  --red:#CC0000;--red-lt:#FCEBEB;--amber:#854F0B;--amber-bg:#FFFBE6;
+  --green:#027A48;--green-bg:#ECFDF3;--green-md:#6CE9A6;
+  --g00:#F8F9FA;--g10:#F0F2F5;--g20:#E8ECF1;--g30:#D0D5DD;
+  --g50:#8A94A6;--g70:#475467;--g80:#344054;--g90:#1D2939;
+  --white:#fff;--r:12px;--rs:8px;
+  --sh:0 1px 3px rgba(0,0,0,.08);--shm:0 4px 20px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Helvetica Neue','Hiragino Sans','Meiryo',sans-serif;background:var(--g10);color:var(--g90);font-size:14px;min-height:100vh;}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0F2D5C 0%,#1A3F7A 100%);}
+.login-card{background:var(--white);border-radius:16px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.25);margin:16px;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.login-logo .ico{font-size:40px;margin-bottom:8px;}
+.login-logo h1{font-size:20px;font-weight:700;color:var(--navy);}
+.login-logo p{font-size:12px;color:var(--g50);margin-top:4px;}
+.login-badge{display:inline-block;background:var(--navy);color:#fff;font-size:11px;padding:3px 10px;border-radius:12px;margin-top:8px;}
+.login-field{margin-bottom:16px;}
+.login-field label{display:block;font-size:12px;font-weight:600;color:var(--g80);margin-bottom:5px;}
+.login-field input{width:100%;border:1.5px solid var(--g30);border-radius:var(--rs);padding:10px 14px;font-size:14px;font-family:inherit;outline:none;transition:border-color .15s;}
+.login-field input:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(15,45,92,.1);}
+.login-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:var(--rs);padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;margin-top:8px;}
+.login-btn:hover{background:var(--navy2);transform:translateY(-1px);}
+.login-err{background:var(--red-lt);color:var(--red);border-radius:6px;padding:10px 14px;font-size:13px;margin-top:12px;display:none;}
+
+/* ── APP SHELL ── */
+#app{display:none;min-height:100vh;}
+.topbar{background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.topbar-l{display:flex;align-items:center;gap:10px;}
+.topbar-logo{font-size:20px;}
+.topbar-title{font-size:14px;font-weight:700;}
+.topbar-sub{font-size:10px;opacity:.55;margin-top:1px;}
+.topbar-r{display:flex;align-items:center;gap:10px;}
+.user-chip{background:rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:12px;}
+.logout-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;}
+
+/* ── BOTTOM NAV (mobile) / SIDE NAV (desktop) ── */
+.sidenav{width:220px;background:var(--white);border-right:1px solid var(--g20);padding:16px 10px;position:fixed;top:52px;bottom:0;left:0;overflow-y:auto;z-index:50;transition:transform .25s;}
+.sidenav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;border:none;background:none;color:var(--g70);font-family:inherit;font-size:13px;font-weight:500;width:100%;text-align:left;transition:all .15s;}
+.sidenav-item:hover{background:var(--g10);color:var(--g90);}
+.sidenav-item.active{background:var(--navy-lt);color:var(--navy);font-weight:700;}
+.sidenav-item .nav-ico{font-size:17px;width:24px;text-align:center;}
+.nav-badge{background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:10px;margin-left:auto;}
+.content{margin-left:220px;padding:20px;min-height:calc(100vh - 52px);}
+
+/* モバイル */
+@media(max-width:768px){
+  .sidenav{transform:translateX(-100%);top:52px;}
+  .sidenav.open{transform:translateX(0);}
+  .content{margin-left:0;padding:12px 12px 80px;}
+  .topbar-sub{display:none;}
+  .menu-btn{display:flex!important;}
+  .bottom-nav{display:flex!important;}
+}
+.menu-btn{display:none;background:none;border:none;color:#fff;font-size:22px;cursor:pointer;padding:4px;}
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--g20);z-index:100;padding:4px 0;}
+.bn-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 2px;cursor:pointer;border:none;background:none;font-family:inherit;color:var(--g50);font-size:10px;gap:2px;transition:color .15s;}
+.bn-item.active{color:var(--navy);}
+.bn-item .bn-ico{font-size:20px;}
+
+/* ── PANELS ── */
+.panel{background:var(--white);border-radius:var(--r);border:1px solid var(--g20);box-shadow:var(--sh);overflow:hidden;margin-bottom:16px;}
+.ph{padding:14px 18px 12px;border-bottom:1px solid var(--g10);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ph-l{display:flex;align-items:center;gap:8px;}
+.ph-ico{width:28px;height:28px;background:var(--navy-lt);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.ph h2{font-size:13px;font-weight:700;}
+.ph p{font-size:11px;color:var(--g50);margin-top:1px;}
+.pb{padding:14px 18px 16px;}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+@media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:var(--white);border:1px solid var(--g20);border-radius:var(--r);padding:16px;text-align:center;box-shadow:var(--sh);}
+.stat-n{font-size:30px;font-weight:800;line-height:1;}
+.stat-l{font-size:11px;color:var(--g50);margin-top:4px;}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{background:var(--g10);padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--g50);border-bottom:1px solid var(--g20);white-space:nowrap;}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--g10);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:var(--g00);}
+@media(max-width:600px){.tbl{display:block;overflow-x:auto;}}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 9px;border-radius:10px;font-weight:600;white-space:nowrap;}
+.badge-ok  {background:var(--green-bg);color:var(--green);border:1px solid var(--green-md);}
+.badge-warn{background:var(--amber-bg);color:var(--amber);border:1px solid #FAC775;}
+.badge-ng  {background:var(--red-lt);color:var(--red);border:1px solid #FDA29B;}
+.badge-new {background:var(--navy-lt);color:var(--navy);border:1px solid var(--navy-md);}
+
+/* ── FORMS ── */
+.field{margin-bottom:12px;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--g80);margin-bottom:4px;}
+.field label .req{color:var(--red);}
+.field input,.field select{width:100%;border:1.5px solid var(--g30);border-radius:var(--rs);padding:8px 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.field input:focus,.field select:focus{border-color:var(--navy);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:480px){.fr{grid-template-columns:1fr;}}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit;}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:hover{background:var(--navy2);}
+.btn-outline{background:var(--white);color:var(--navy);border:1.5px solid var(--navy);}
+.btn-outline:hover{background:var(--navy-lt);}
+.btn-danger{background:var(--red);color:#fff;font-size:12px;padding:5px 10px;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.btn-full{width:100%;justify-content:center;}
+.bg{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── CODE DISPLAY ── */
+.login-code{font-family:monospace;font-size:22px;font-weight:700;letter-spacing:.3em;background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;text-align:center;display:inline-block;}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:16px;}
+.overlay.show{opacity:1;pointer-events:all;}
+.modal{background:var(--white);border-radius:var(--r);width:100%;max-width:560px;max-height:92vh;overflow-y:auto;box-shadow:var(--shm);transform:translateY(12px);transition:transform .2s;}
+.overlay.show .modal{transform:translateY(0);}
+.mh{padding:14px 18px;border-bottom:1px solid var(--g10);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:5;}
+.mh h3{font-size:15px;font-weight:700;}
+.mb{padding:16px 18px;}
+.mf{padding:12px 18px;border-top:1px solid var(--g10);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--white);}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;margin-bottom:12px;}
+.search-wrap input{width:100%;padding:8px 12px 8px 34px;border:1.5px solid var(--g30);border-radius:var(--rs);font-size:13px;font-family:inherit;outline:none;}
+.search-wrap input:focus{border-color:var(--navy);}
+.search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--g50);}
+
+/* ── CHECK CONFIRM ── */
+.check-result{border-radius:10px;padding:20px;text-align:center;margin-bottom:12px;border:2px solid;}
+.check-result.ok  {background:var(--green-bg);border-color:var(--green-md);}
+.check-result.warn{background:var(--amber-bg);border-color:#FAC775;}
+.check-result.ng  {background:var(--red-lt);border-color:#FDA29B;}
+.check-result .big{font-size:48px;margin-bottom:8px;}
+.check-result .name{font-size:20px;font-weight:700;margin-bottom:4px;}
+.check-result .co{font-size:13px;color:var(--g50);margin-bottom:10px;}
+.check-result .status{font-size:16px;font-weight:700;padding:6px 20px;border-radius:6px;display:inline-block;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:80px;right:16px;background:var(--g90);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;box-shadow:var(--shm);opacity:0;transform:translateY(8px);transition:all .25s;z-index:9999;pointer-events:none;max-width:90vw;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+
+/* ── EMPTY ── */
+.empty{display:flex;flex-direction:column;align-items:center;padding:40px 16px;color:var(--g50);gap:8px;}
+.empty .ico{font-size:36px;opacity:.3;}
+
+/* ── VENDOR CARD (mobile) ── */
+.v-card{border:1px solid var(--g20);border-radius:8px;padding:12px 14px;margin-bottom:8px;background:var(--white);}
+.v-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.v-card-name{font-size:14px;font-weight:700;}
+.v-card-co{font-size:12px;color:var(--g50);}
+.v-card-meta{font-size:12px;color:var(--g70);}
+
+.hint{font-size:11px;color:var(--g50);margin-top:3px;}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="ico">🏥</div>
+      <h1>八尾徳洲会総合病院</h1>
+      <p>外部業者 オリエンテーション管理システム</p>
+      <span class="login-badge">病院スタッフ専用</span>
+    </div>
+    <div class="login-field">
+      <label>ユーザー名</label>
+      <input type="text" id="login-user" placeholder="username" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>パスワード</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()" id="login-btn">ログイン</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-l">
+      <button class="menu-btn" onclick="toggleMenu()">☰</button>
+      <span class="topbar-logo">🏥</span>
+      <div>
+        <div class="topbar-title">オリエンテーション管理</div>
+        <div class="topbar-sub">八尾徳洲会総合病院 手術室</div>
+      </div>
+    </div>
+    <div class="topbar-r">
+      <span class="user-chip" id="user-chip"></span>
+      <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+
+  <!-- Side nav -->
+  <nav class="sidenav" id="sidenav">
+    <div class="sidenav-item active" onclick="showTab('dashboard')" id="sn-dashboard">
+      <span class="nav-ico">📊</span> ダッシュボード
+    </div>
+    <div class="sidenav-item" onclick="showTab('vendors')" id="sn-vendors">
+      <span class="nav-ico">👥</span> 業者管理
+    </div>
+    <div class="sidenav-item" onclick="showTab('check')" id="sn-check">
+      <span class="nav-ico">✅</span> 当日確認
+    </div>
+    <div class="sidenav-item" onclick="showTab('staff')" id="sn-staff">
+      <span class="nav-ico">👩‍⚕️</span> スタッフ管理
+    </div>
+    <div class="sidenav-item" onclick="showTab('records')" id="sn-records">
+      <span class="nav-ico">📋</span> 受講記録
+      <span class="nav-badge" id="alert-badge" style="display:none;"></span>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="content" id="content">
+
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-n" id="s-total" style="color:var(--navy)">—</div><div class="stat-l">登録業者数</div></div>
+        <div class="stat-card"><div class="stat-n" id="s-ok"    style="color:var(--green)">—</div><div class="stat-l">有効（受講済）</div></div>
+        <div class="stat-card"><div class="stat-n" id="s-warn"  style="color:var(--amber)">—</div><div class="stat-l">期限間近</div></div>
+        <div class="stat-card"><div class="stat-n" id="s-ng"    style="color:var(--red)">—</div><div class="stat-l">期限切れ・未受講</div></div>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-l"><div class="ph-ico">⚠️</div><div><h2>要対応リスト</h2><p>30日以内に期限切れ・未受講</p></div></div>
+          <button class="btn btn-sm btn-outline" onclick="loadDashboard()">🔄 更新</button>
+        </div>
+        <div class="pb" style="padding:0;" id="alert-list">
+          <div class="empty"><div class="ico">⏳</div><p>読み込み中...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VENDORS -->
+    <div id="tab-vendors" style="display:none;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openAddVendor()">➕ 業者を登録</button>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-l"><div class="ph-ico">👥</div><div><h2>登録業者一覧</h2><p id="vendor-count-label">読み込み中...</p></div></div></div>
+        <div class="pb">
+          <div class="search-wrap"><span class="search-ico">🔍</span>
+            <input type="text" placeholder="氏名・企業名で検索..." id="vendor-search" oninput="renderVendorList()">
+          </div>
+          <div id="vendor-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECK -->
+    <div id="tab-check" style="display:none;">
+      <div class="panel">
+        <div class="ph"><div class="ph-l"><div class="ph-ico">🔎</div><div><h2>立入前 受講確認</h2><p>手術当日・業者名で即座に確認</p></div></div></div>
+        <div class="pb">
+          <div class="search-wrap"><span class="search-ico">🔍</span>
+            <input type="text" id="check-search" placeholder="業者氏名・企業名..." oninput="doCheck(this.value)">
+          </div>
+          <div id="check-results"></div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- STAFF -->
+    <div id="tab-staff" style="display:none;">
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <button class="btn btn-primary" onclick="openAddStaff()">➕ スタッフを追加</button>
+      </div>
+      <div class="panel">
+        <div class="ph"><div class="ph-l"><div class="ph-ico">👩‍⚕️</div><div><h2>病院スタッフ管理</h2><p id="staff-count-label">読み込み中...</p></div></div></div>
+        <div class="pb" style="padding:0;" id="staff-table-wrap">
+          <div class="empty"><div class="ico">⏳</div><p>読み込み中...</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECORDS -->
+    <div id="tab-records" style="display:none;">
+      <div class="panel">
+        <div class="ph"><div class="ph-l"><div class="ph-ico">📋</div><div><h2>受講記録一覧</h2></div></div>
+          <button class="btn btn-sm btn-outline" onclick="loadRecords()">🔄 更新</button>
+        </div>
+        <div class="pb" style="padding:0;" id="records-table-wrap">
+          <div class="empty"><div class="ico">⏳</div><p>読み込み中...</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav (mobile) -->
+  <nav class="bottom-nav">
+    <button class="bn-item active" onclick="showTab('dashboard')" id="bn-dashboard"><span class="bn-ico">📊</span>ダッシュボード</button>
+    <button class="bn-item" onclick="showTab('vendors')"  id="bn-vendors"><span class="bn-ico">👥</span>業者管理</button>
+    <button class="bn-item" onclick="showTab('check')"    id="bn-check"><span class="bn-ico">✅</span>当日確認</button>
+    <button class="bn-item" onclick="showTab('staff')"   id="bn-staff"><span class="bn-ico">👩‍⚕️</span>スタッフ</button>
+    <button class="bn-item" onclick="showTab('records')"  id="bn-records"><span class="bn-ico">📋</span>受講記録</button>
+  </nav>
+</div>
+
+<!-- ── MODALS ── -->
+
+<!-- Add Staff -->
+<div class="overlay" id="staff-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="mh"><h3 id="sm-title">スタッフを追加</h3><button onclick="closeModal('staff-modal')" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button></div>
+    <div class="mb">
+      <div class="field"><label>ユーザー名<span class="req">*</span></label><input type="text" id="sm-user" placeholder="nurse_tanaka" autocomplete="off"></div>
+      <div class="field"><label>表示名<span class="req">*</span></label><input type="text" id="sm-display" placeholder="田中　花子"></div>
+      <div class="field"><label>パスワード<span class="req">*</span></label><input type="password" id="sm-pass" placeholder="8文字以上" autocomplete="new-password"></div>
+      <div class="field"><label>権限</label>
+        <select id="sm-role">
+          <option value="staff">スタッフ（通常）</option>
+          <option value="admin">管理者（スタッフ管理可）</option>
+        </select>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('staff-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveStaff()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Vendor -->
+<div class="overlay" id="vendor-modal">
+  <div class="modal">
+    <div class="mh"><h3 id="vm-title">業者を登録</h3><button onclick="closeModal('vendor-modal')" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button></div>
+    <div class="mb">
+      <div class="fr">
+        <div class="field"><label>担当者氏名<span class="req">*</span></label><input type="text" id="vm-name" placeholder="田中　一郎"></div>
+        <div class="field"><label>所属企業名<span class="req">*</span></label><input type="text" id="vm-company" placeholder="Medtronic Japan Co., Ltd."></div>
+      </div>
+      <div class="field"><label>担当器材種類</label>
+        <select id="vm-device">
+          <option>脊椎インプラント全般</option><option>冠動脈ステント</option><option>ペースメーカー</option>
+          <option>人工関節</option><option>人工膝関節</option><option>閉頭プレート・スクリュー</option>
+          <option>シャントシステム</option><option>心臓人工弁</option><option>その他</option>
+        </select>
+      </div>
+      <div class="fr">
+        <div class="field"><label>電話番号</label><input type="tel" id="vm-tel" placeholder="090-XXXX-XXXX"></div>
+        <div class="field"><label>メールアドレス</label><input type="email" id="vm-email" placeholder="tanaka@example.com"></div>
+      </div>
+      <div class="field"><label>備考</label><input type="text" id="vm-note" placeholder="担当科など"></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('vendor-modal')">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveVendor()" id="vm-save">登録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Vendor Detail -->
+<div class="overlay" id="detail-modal">
+  <div class="modal" style="max-width:600px;">
+    <div class="mh"><h3 id="dm-title">業者詳細</h3><button onclick="closeModal('detail-modal')" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button></div>
+    <div class="mb" id="dm-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────
+const API = window.location.hostname === 'localhost'
+  ? 'http://localhost:8888/.netlify/functions/api'
+  : '/.netlify/functions/api';
+
+// ── State ─────────────────────────────────────────────────────────────
+let token = localStorage.getItem('h_token') || '';
+let currentUser = null;
+let allVendors = [];
+let allRecords = [];
+let editingVendorId = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const fmtD = d => { if(!d) return '—'; const [y,m,dd]=d.slice(0,10).split('-'); return `${y}年${m}月${dd}日`; };
+const today = () => new Date().toISOString().slice(0,10);
+const daysLeft = e => { if(!e) return -999; return Math.floor((new Date(e)-new Date())/86400000); };
+
+async function api(path, method='GET', body=null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || r.statusText);
+  return data;
+}
+
+function toast(msg, type='') {
+  const el = $('toast');
+  el.textContent = msg; el.className = `toast ${type} show`;
+  clearTimeout(el._t); el._t = setTimeout(() => el.className = 'toast', 3000);
+}
+
+// ── Vendor status ─────────────────────────────────────────────────────
+function vendorStatus(vendor) {
+  const recs = (vendor.orientation_records || []).filter(r => r.test_pass && !r.pledge_only);
+  if (!recs.length) return 'none';
+  const latest = recs.sort((a,b) => new Date(b.expiry)-new Date(a.expiry))[0];
+  const dl = daysLeft(latest.expiry);
+  return dl < 0 ? 'expired' : dl <= 30 ? 'warn' : 'ok';
+}
+function latestRecord(vendor) {
+  const recs = (vendor.orientation_records || []).filter(r => r.test_pass && !r.pledge_only);
+  if (!recs.length) return null;
+  return recs.sort((a,b) => new Date(b.expiry)-new Date(a.expiry))[0];
+}
+function statusBadge(st) {
+  return { ok:'<span class="badge badge-ok">✅ 有効</span>', warn:'<span class="badge badge-warn">⚠️ 期限間近</span>',
+    expired:'<span class="badge badge-ng">❌ 期限切れ</span>', none:'<span class="badge badge-new">📝 未受講</span>' }[st] || '';
+}
+
+// ── Login ─────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  if (token) {
+    try {
+      currentUser = await api('/me');
+      showApp();
+    } catch { token=''; localStorage.removeItem('h_token'); }
+  }
+});
+
+async function doLogin() {
+  const username = $('login-user').value.trim();
+  const password = $('login-pass').value;
+  if (!username || !password) return;
+  $('login-btn').textContent = '確認中...'; $('login-btn').disabled = true;
+  try {
+    const res = await api('/auth/hospital', 'POST', { username, password });
+    token = res.token;
+    localStorage.setItem('h_token', token);
+    currentUser = res.user;
+    showApp();
+  } catch(e) {
+    $('login-err').textContent = e.message; $('login-err').style.display = '';
+  } finally { $('login-btn').textContent = 'ログイン'; $('login-btn').disabled = false; }
+}
+
+function showApp() {
+  $('login-screen').style.display = 'none';
+  $('app').style.display = '';
+  $('user-chip').textContent = currentUser?.display_name || currentUser?.username || '';
+  loadDashboard();
+}
+
+async function doLogout() {
+  try { await api('/auth/logout', 'POST'); } catch {}
+  token = ''; localStorage.removeItem('h_token');
+  location.reload();
+}
+
+// ── Tab ───────────────────────────────────────────────────────────────
+let currentTab = 'dashboard';
+function showTab(t) {
+  ['dashboard','vendors','check','staff','records'].forEach(id => {
+    $(`tab-${id}`).style.display = id===t ? '' : 'none';
+    [`sn-${id}`,$(`bn-${id}`)].forEach(el => el?.classList.toggle('active', id===t));
+  });
+  currentTab = t;
+  $('sidenav').classList.remove('open');
+  if (t==='vendors')  loadVendors();
+  if (t==='records')  loadRecords();
+  if (t==='dashboard') loadDashboard();
+  if (t==='staff')     loadStaff();
+}
+
+function toggleMenu() { $('sidenav').classList.toggle('open'); }
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const stats = await api('/dashboard');
+    $('s-total').textContent = stats.total;
+    $('s-ok').textContent    = stats.ok;
+    $('s-warn').textContent  = stats.warn;
+    $('s-ng').textContent    = stats.ng;
+    const alertCount = stats.warn + stats.ng;
+    const badge = $('alert-badge');
+    badge.textContent    = alertCount || '';
+    badge.style.display  = alertCount ? '' : 'none';
+  } catch {}
+
+  try {
+    const vendors = await api('/vendors');
+    const alerts = vendors.filter(v => ['warn','expired','none'].includes(vendorStatus(v)));
+    const el = $('alert-list');
+    if (!alerts.length) {
+      el.innerHTML = '<div class="empty"><div class="ico">⭐</div><p>要対応の業者はいません</p></div>';
+      return;
+    }
+    el.innerHTML = `<table class="tbl">
+      <thead><tr><th>担当者名</th><th>所属企業</th><th>有効期限</th><th>状態</th><th></th></tr></thead>
+      <tbody>${alerts.map(v => {
+        const r = latestRecord(v); const st = vendorStatus(v);
+        return `<tr>
+          <td><strong>${v.name}</strong></td>
+          <td style="color:var(--g70);">${v.company}</td>
+          <td style="color:var(--g70);">${r ? fmtD(r.expiry) : '—'}</td>
+          <td>${statusBadge(st)}</td>
+          <td><button class="btn btn-sm btn-primary" onclick="openDetail('${v.id}')">詳細</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  } catch(e) { $('alert-list').innerHTML = `<div class="empty"><p>読み込みエラー：${e.message}</p></div>`; }
+}
+
+// ── VENDORS ───────────────────────────────────────────────────────────
+async function loadVendors() {
+  try {
+    allVendors = await api('/vendors');
+    $('vendor-count-label').textContent = `${allVendors.length}件登録`;
+    renderVendorList();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+function renderVendorList() {
+  const q = $('vendor-search').value.toLowerCase();
+  const list = allVendors.filter(v => !q || v.name.includes(q) || v.company.includes(q));
+  const el = $('vendor-list');
+  if (!list.length) { el.innerHTML = '<div class="empty"><div class="ico">👥</div><p>該当なし</p></div>'; return; }
+
+  // Responsive: cards on mobile, table on desktop
+  const isMobile = window.innerWidth <= 600;
+  if (isMobile) {
+    el.innerHTML = list.map(v => {
+      const r = latestRecord(v); const st = vendorStatus(v); const dl = r ? daysLeft(r.expiry) : -1;
+      return `<div class="v-card" onclick="openDetail('${v.id}')">
+        <div class="v-card-top"><div><div class="v-card-name">${v.name}</div><div class="v-card-co">${v.company}</div></div>${statusBadge(st)}</div>
+        <div class="v-card-meta">📦 ${v.device}　|　${r ? '有効期限：'+fmtD(r.expiry) : '未受講'}</div>
+      </div>`;
+    }).join('');
+  } else {
+    el.innerHTML = `<table class="tbl">
+      <thead><tr><th>担当者名</th><th>所属企業</th><th>器材</th><th>有効期限</th><th>状態</th><th></th></tr></thead>
+      <tbody>${list.map(v => {
+        const r = latestRecord(v); const st = vendorStatus(v);
+        return `<tr>
+          <td><strong>${v.name}</strong></td>
+          <td>${v.company}</td>
+          <td style="color:var(--g70);font-size:12px;">${v.device}</td>
+          <td style="color:var(--g70);">${r ? fmtD(r.expiry) : '—'}</td>
+          <td>${statusBadge(st)}</td>
+          <td><button class="btn btn-sm btn-outline" onclick="openDetail('${v.id}')">詳細</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+}
+
+// ── Vendor Add/Edit ───────────────────────────────────────────────────
+function openAddVendor() {
+  editingVendorId = null;
+  ['vm-name','vm-company','vm-tel','vm-email','vm-note'].forEach(id => $(id).value = '');
+  $('vm-device').value = '脊椎インプラント全般';
+  $('vm-title').textContent = '業者を登録';
+  $('vm-save').textContent  = '登録する';
+  $('vendor-modal').classList.add('show');
+}
+
+async function saveVendor() {
+  const name    = $('vm-name').value.trim();
+  const company = $('vm-company').value.trim();
+  if (!name || !company) { toast('氏名と企業名は必須です', 'err'); return; }
+  const payload = { name, company, device: $('vm-device').value, tel: $('vm-tel').value.trim(), email: $('vm-email').value.trim(), note: $('vm-note').value.trim() };
+  try {
+    if (editingVendorId) {
+      await api(`/vendors/${editingVendorId}`, 'PUT', payload);
+      toast('✅ 業者情報を更新しました', 'ok');
+    } else {
+      const v = await api('/vendors', 'POST', payload);
+      toast(`✅ ${name} を登録しました。ログインコード：${v.login_code}`, 'ok');
+    }
+    closeModal('vendor-modal');
+    loadVendors();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Vendor Detail ─────────────────────────────────────────────────────
+async function openDetail(id) {
+  const v = allVendors.find(x => x.id === id);
+  if (!v) return;
+  const st = vendorStatus(v);
+  const r  = latestRecord(v);
+  const recs = (v.orientation_records || []).filter(x => !x.pledge_only);
+  const pledgeRec = (v.orientation_records || []).find(x => x.pledge_signed);
+
+  $('dm-title').textContent = `${v.name}（${v.company}）`;
+  $('dm-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+      <div style="background:var(--g00);border-radius:8px;padding:10px 12px;"><div style="font-size:11px;color:var(--g50);margin-bottom:4px;">受講状態</div>${statusBadge(st)}</div>
+      <div style="background:var(--g00);border-radius:8px;padding:10px 12px;"><div style="font-size:11px;color:var(--g50);margin-bottom:4px;">有効期限残り</div>
+        <div style="font-size:16px;font-weight:700;color:${!r||daysLeft(r.expiry)<0?'var(--red)':daysLeft(r.expiry)<=30?'var(--amber)':'var(--green)'};">${r?daysLeft(r.expiry)+'日':'未受講'}</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--g10);"><span style="color:var(--g50);">器材</span><span>${v.device}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--g10);"><span style="color:var(--g50);">電話</span><span>${v.tel||'—'}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--g10);"><span style="color:var(--g50);">ログインコード</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="login-code" style="font-size:16px;padding:5px 14px;">${v.login_code||'—'}</span>
+        <button class="btn btn-sm btn-outline" onclick="resetCode('${v.id}')">再発行</button>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--g10);"><span style="color:var(--g50);">誓約書署名</span>
+      <span style="color:${pledgeRec?'var(--green)':'var(--red)'};">${pledgeRec?'✅ 電子署名済 ('+pledgeRec.pledge_signed_at?.slice(0,10)+')':'❌ 未署名'}</span>
+    </div>
+    ${pledgeRec?.pledge_sig_image ? `<div style="margin:10px 0;"><div style="font-size:11px;color:var(--g50);margin-bottom:4px;">署名画像</div><img src="${pledgeRec.pledge_sig_image}" style="height:48px;border:1px solid var(--g30);border-radius:4px;background:#fff;"></div>` : ''}
+    <div style="margin-top:14px;font-size:12px;font-weight:700;color:var(--g70);margin-bottom:8px;">受講履歴（${recs.length}件）</div>
+    ${recs.length ? recs.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(rec => `
+      <div style="border:1px solid var(--g20);border-radius:8px;padding:10px 14px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-weight:700;">${fmtD(rec.date)}</span>
+          <span class="badge ${rec.test_pass?'badge-ok':'badge-ng'}">${rec.test_pass?'合格':'不合格'}</span>
+        </div>
+        <div style="font-size:12px;color:var(--g70);display:grid;grid-template-columns:1fr 1fr;gap:3px;">
+          <div>有効期限：${fmtD(rec.expiry)}</div>
+          <div>担当：${rec.staff_name||'—'}</div>
+          <div>テスト：${(rec.test_scores||[]).filter(Boolean).length}/5問</div>
+          <div>動画：${rec.watched_all?'✅ 全視聴':'部分的'}</div>
+        </div>
+      </div>`).join('') : '<p style="color:var(--g50);font-size:13px;">受講履歴なし</p>'}
+    <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm" onclick="openEditVendor('${v.id}')">✏️ 編集</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteVendor('${v.id}')">🗑️ 削除</button>
+    </div>
+  `;
+  $('detail-modal').classList.add('show');
+}
+
+function openEditVendor(id) {
+  const v = allVendors.find(x => x.id === id);
+  if (!v) return;
+  editingVendorId = id;
+  $('vm-name').value    = v.name;
+  $('vm-company').value = v.company;
+  $('vm-device').value  = v.device;
+  $('vm-tel').value     = v.tel || '';
+  $('vm-email').value   = v.email || '';
+  $('vm-note').value    = v.note || '';
+  $('vm-title').textContent = '業者情報を編集';
+  $('vm-save').textContent  = '更新する';
+  closeModal('detail-modal');
+  $('vendor-modal').classList.add('show');
+}
+
+async function deleteVendor(id) {
+  if (!confirm('この業者を削除しますか？')) return;
+  try {
+    await api(`/vendors/${id}`, 'DELETE');
+    closeModal('detail-modal');
+    toast('業者を削除しました');
+    loadVendors();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function resetCode(id) {
+  if (!confirm('ログインコードを再発行しますか？\n現在のコードは使えなくなります。')) return;
+  try {
+    const { login_code } = await api(`/vendors/${id}/reset-code`, 'POST');
+    toast(`新しいコード：${login_code}`, 'ok');
+    loadVendors();
+    closeModal('detail-modal');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── CHECK ─────────────────────────────────────────────────────────────
+async function doCheck(q) {
+  const el = $('check-results');
+  if (!q) { el.innerHTML = ''; return; }
+  try {
+    const vendors = await api('/vendors');
+    const results = vendors.filter(v => v.name.includes(q) || v.company.includes(q));
+    if (!results.length) { el.innerHTML = '<p style="color:var(--g50);padding:12px 0;">該当する業者が見つかりません</p>'; return; }
+    el.innerHTML = results.map(v => {
+      const st = vendorStatus(v); const r = latestRecord(v);
+      const dl = r ? daysLeft(r.expiry) : -1;
+      const cls = st==='ok'?'ok':st==='warn'?'warn':'ng';
+      const statusText = st==='ok'?'✅ 立入可':st==='warn'?'⚠️ 立入可（期限間近）':'🚫 立入不可';
+      const statusColor = st==='ok'?'var(--green)':st==='warn'?'var(--amber)':'var(--red)';
+      return `<div class="check-result ${cls}">
+        <div class="big">${st==='ok'?'✅':st==='warn'?'⚠️':'🚫'}</div>
+        <div class="name">${v.name}</div>
+        <div class="co">${v.company}　｜　${v.device}</div>
+        <div class="status" style="background:${statusColor};color:#fff;">${statusText}</div>
+        <div style="font-size:13px;margin-top:10px;opacity:.7;">${r?`有効期限：${fmtD(r.expiry)}（残り${dl>=0?dl+'日':'期限切れ'}）`:'受講記録なし'}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── RECORDS ───────────────────────────────────────────────────────────
+async function loadRecords() {
+  const wrap = $('records-table-wrap');
+  try {
+    const records = await api('/records');
+    if (!records.length) { wrap.innerHTML = '<div class="empty"><div class="ico">📋</div><p>受講記録がありません</p></div>'; return; }
+    wrap.innerHTML = `<table class="tbl">
+      <thead><tr><th>氏名</th><th>企業</th><th>受講日</th><th>有効期限</th><th>テスト</th><th>動画</th><th>誓約書</th></tr></thead>
+      <tbody>${records.filter(r=>!r.pledge_only).map(r => `<tr>
+        <td><strong>${r.vendors?.name||'—'}</strong></td>
+        <td style="font-size:12px;color:var(--g70);">${r.vendors?.company||'—'}</td>
+        <td>${fmtD(r.date)}</td>
+        <td style="color:${daysLeft(r.expiry)<0?'var(--red)':daysLeft(r.expiry)<=30?'var(--amber)':'inherit'};">${fmtD(r.expiry)}</td>
+        <td><span class="badge ${r.test_pass?'badge-ok':'badge-ng'}">${r.test_pass?'合格':'不合格'}</span></td>
+        <td>${r.watched_all?'✅':'—'}</td>
+        <td style="color:${r.pledge_signed?'var(--green)':'var(--g50)'};">${r.pledge_signed?'✅ 署名済':'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  } catch(e) { wrap.innerHTML = `<div class="empty"><p>エラー：${e.message}</p></div>`; }
+}
+
+
+// ── STAFF ─────────────────────────────────────────────────────────────
+async function loadStaff() {
+  try {
+    const list = await api('/staff');
+    $('staff-count-label').textContent = `${list.length}件`;
+    $('staff-table-wrap').innerHTML = list.length
+      ? `<table class="tbl">
+          <thead><tr><th>ユーザー名</th><th>表示名</th><th>権限</th><th>登録日</th><th></th></tr></thead>
+          <tbody>${list.map(s => `<tr>
+            <td><code style="background:var(--g10);padding:2px 6px;border-radius:4px;">${s.username}</code></td>
+            <td><strong>${s.display_name||'—'}</strong></td>
+            <td><span class="badge ${s.role==='admin'?'badge-warn':'badge-new'}">${s.role==='admin'?'👑 管理者':'スタッフ'}</span></td>
+            <td style="color:var(--g50);font-size:12px;">${fmtD(s.created_at?.slice(0,10))}</td>
+            <td>${s.id !== currentUser?.id
+              ? `<button class="btn btn-danger btn-sm" onclick="deleteStaff('${s.id}','${s.display_name||s.username}')">削除</button>`
+              : '<span style="font-size:11px;color:var(--g50);">（自分）</span>'
+            }</td>
+          </tr>`).join('')}</tbody>
+        </table>`
+      : '<div class="empty"><div class="ico">👩‍⚕️</div><p>スタッフがいません</p></div>';
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+function openAddStaff() {
+  ['sm-user','sm-display','sm-pass'].forEach(id => $(id).value = '');
+  $('sm-role').value = 'staff';
+  $('staff-modal').classList.add('show');
+}
+
+async function saveStaff() {
+  const username     = $('sm-user').value.trim();
+  const display_name = $('sm-display').value.trim();
+  const password     = $('sm-pass').value;
+  const role         = $('sm-role').value;
+  if (!username || !display_name || !password) { toast('すべての項目を入力してください', 'err'); return; }
+  if (password.length < 8) { toast('パスワードは8文字以上にしてください', 'err'); return; }
+  try {
+    await api('/staff', 'POST', { username, display_name, password, role });
+    toast(`✅ ${display_name} を追加しました`, 'ok');
+    closeModal('staff-modal');
+    loadStaff();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+async function deleteStaff(id, name) {
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  try {
+    await api(`/staff/${id}`, 'DELETE');
+    toast('削除しました');
+    loadStaff();
+  } catch(e) { toast(e.message, 'err'); }
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────────
+function closeModal(id) { $(id).classList.remove('show'); }
+window.addEventListener('click', e => {
+  ['vendor-modal','detail-modal'].forEach(id => {
+    if (e.target === $(id)) closeModal(id);
+  });
+});
+</script>
+</body>
+</html>
